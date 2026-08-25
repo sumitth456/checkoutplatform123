@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Modules\Order\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class ValidateCouponRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'code' => ['required', 'string', 'max:64'],
+            'subtotal' => ['nullable', 'numeric', 'min:0'],
+        ];
+    }
+}

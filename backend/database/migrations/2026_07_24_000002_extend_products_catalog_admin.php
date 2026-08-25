@@ -1,0 +1,39 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('products', function (Blueprint $table): void {
+            $table->foreignId('subscription_plan_id')
+                ->nullable()
+                ->after('is_subscription')
+                ->constrained('subscription_plans')
+                ->nullOnDelete();
+        });
+
+        Schema::create('product_related', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('related_product_id')->constrained('products')->cascadeOnDelete();
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->timestamps();
+
+            $table->unique(['product_id', 'related_product_id']);
+            $table->index(['product_id', 'sort_order']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('product_related');
+
+        Schema::table('products', function (Blueprint $table): void {
+            $table->dropConstrainedForeignId('subscription_plan_id');
+        });
+    }
+};

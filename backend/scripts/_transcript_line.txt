@@ -1,0 +1,23 @@
+﻿powershell : = : The term '=' is not recognized as the name of a cmdlet, function, script file, or operable program. 
+Check the 
+At C:\Users\Bcent53\AppData\Local\Temp\ps-script-022c38e4-2521-4548-b9b7-b251d254ba17.ps1:108 char:1
++ powershell -NoProfile -Command "$line = (Get-Content 'C:\Users\Bcent5 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (= : The term '=...ram. Check the :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:2
++  = (Get-Content 'C:\Users\Bcent53\.cursor\projects\c-CheckoutPlatform ...
++  ~
+    + CategoryInfo          : ObjectNotFound: (=:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+.Length : The term '.Length' is not recognized as the name of a cmdlet, function, script file, or operable program. 
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:204
++ ... 3cd50214fb53.jsonl' | Select-Object -Index 1050); if (.Length -gt 500 ...
++                                                           ~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (.Length:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 

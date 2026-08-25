@@ -1,0 +1,40 @@
+# Secrets and local env
+.env
+.env.docker
+.env.*
+!.env.example
+!.env.docker.example
+!.env.docker.vps.example
+!.env.production.example
+
+# Dependencies and build artifacts
+backend/vendor/
+backend/node_modules/
+backend/public/hot
+backend/public/storage
+backend/public/build
+*.tar.gz
+*.tar
+*.tgz
+
+# Laravel runtime
+backend/storage/logs/*
+!backend/storage/logs/.gitignore
+backend/bootstrap/cache/*
+!backend/bootstrap/cache/.gitignore
+backend/storage/*.key
+*.sqlite
+*.sqlite-journal
+.phpunit.result.cache
+
+# Local scratch / diagnostics
+backend/tmp-*
+agent-tools/
+
+# IDE / OS
+.idea/
+.vscode/
+.cursor/
+.DS_Store
+Thumbs.db
+

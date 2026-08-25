@@ -1,0 +1,44 @@
+<?php
+
+require __DIR__.'/../vendor/autoload.php';
+
+$app = require __DIR__.'/../bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+$user = App\Models\User::query()->where('email', 'admin@checkoutplatform.test')->first()
+    ?? App\Models\User::query()->first();
+
+if ($user === null) {
+    echo "User missing\n";
+    exit(1);
+}
+
+Illuminate\Support\Facades\Auth::login($user);
+
+$request = Illuminate\Http\Request::create('/admin/webhooks', 'GET');
+$request->setLaravelSession($app->make('session')->driver());
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+$response = $kernel->handle($request);
+
+$html = (string) $response->getContent();
+echo 'status: '.$response->getStatusCode()."\n";
+echo 'len: '.strlen($html)."\n";
+
+foreach ([
+    'Inbound webhooks',
+    'Gateway webhook status',
+    'Verified',
+    'Server Error',
+] as $needle) {
+    echo $needle.': '.(str_contains($html, $needle) ? 'yes' : 'no')."\n";
+}
+
+try {
+    Livewire\Livewire::test(App\Filament\Admin\Pages\WebhookIntegrations::class);
+    echo "livewire: ok\n";
+} catch (Throwable $e) {
+    echo 'livewire fail: '.$e->getMessage()."\n";
+    exit(1);
+}
+
+$kernel->terminate($request, $response);
