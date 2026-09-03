@@ -31,7 +31,31 @@ class LandingPagePublicController extends Controller
 
     public function show(Request $request, string $slug): View
     {
-        $page = $this->pages->findPublishedBySlug($slug);
+        return $this->renderPublishedPage($request, $slug, tshirtOnly: false);
+    }
+
+    public function showByHostname(Request $request, string $slug): View
+    {
+        return $this->renderPublishedPage($request, $slug, tshirtOnly: true);
+    }
+
+    public function checkoutContext(string $slug): JsonResponse
+    {
+        return $this->renderCheckoutContext($slug, tshirtOnly: false);
+    }
+
+    public function checkoutContextByHostname(string $slug): JsonResponse
+    {
+        return $this->renderCheckoutContext($slug, tshirtOnly: true);
+    }
+
+    private function renderPublishedPage(Request $request, string $slug, bool $tshirtOnly): View
+    {
+        if ($tshirtOnly && ! \App\Modules\LandingPage\Support\TshirtLandingPageSlugValidator::isValid($slug)) {
+            abort(404);
+        }
+
+        $page = $this->pages->findPublishedBySlug($slug, $tshirtOnly);
 
         abort_unless($page !== null, 404);
 
@@ -64,19 +88,23 @@ class LandingPagePublicController extends Controller
             'renderedHtml' => $renderedHtml,
             'renderedJs' => $renderedJs,
             'injectedFormHtml' => $injectedFormHtml,
+            'canonicalUrl' => $page->canonicalPublicUrl(),
         ]);
     }
 
-    public function checkoutContext(string $slug): JsonResponse
+    private function renderCheckoutContext(string $slug, bool $tshirtOnly): JsonResponse
     {
-        $page = $this->pages->findPublishedBySlug($slug);
+        if ($tshirtOnly && ! \App\Modules\LandingPage\Support\TshirtLandingPageSlugValidator::isValid($slug)) {
+            abort(404);
+        }
+
+        $page = $this->pages->findPublishedBySlug($slug, $tshirtOnly);
         abort_unless($page !== null, 404);
 
         return response()->json([
             'data' => $this->campaignContext->buildCheckoutContext($page),
         ]);
     }
-
     public function builderPreview(LandingPage $landingPage): Response
     {
         abort_unless(
@@ -171,6 +199,7 @@ class LandingPagePublicController extends Controller
             'renderedJs' => $renderedJs,
             'injectedFormHtml' => $this->resolveInjectedFormHtml($landingPage),
             'isPreview' => true,
+            'canonicalUrl' => $landingPage->canonicalPublicUrl(),
         ]);
     }
 

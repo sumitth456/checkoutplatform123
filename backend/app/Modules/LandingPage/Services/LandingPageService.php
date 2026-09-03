@@ -182,12 +182,13 @@ final class LandingPageService
         return $page->fresh();
     }
 
-    public function findPublishedBySlug(string $slug): ?LandingPage
+    public function findPublishedBySlug(string $slug, bool $tshirtOnly = false): ?LandingPage
     {
         return LandingPage::query()
             ->where('slug', $slug)
+            ->when($tshirtOnly, fn ($query) => $query->where('is_tshirt_campaign', true))
             ->where('status', LandingPageStatus::Published)
-            ->with(['campaign'])
+            ->with(['campaign', 'product', 'variant'])
             ->first();
     }
 }

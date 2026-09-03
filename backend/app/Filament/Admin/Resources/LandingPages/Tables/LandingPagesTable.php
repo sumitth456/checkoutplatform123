@@ -21,6 +21,19 @@ class LandingPagesTable
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('slug')->searchable()->copyable(),
+                TextColumn::make('publicUrl')
+                    ->label('Public URL')
+                    ->state(fn (LandingPage $record): string => $record->publicUrl())
+                    ->copyable()
+                    ->toggleable(),
+                TextColumn::make('product.name')
+                    ->label('Product')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('variant.sku')
+                    ->label('SKU')
+                    ->state(fn (LandingPage $record): string => (string) ($record->variant?->sku ?? $record->product?->sku ?? '—'))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')->badge()->sortable(),
                 TextColumn::make('campaign.name')->label('Campaign')->sortable(),
                 TextColumn::make('view_count')->label('Views')->sortable(),

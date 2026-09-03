@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Modules\LandingPage\Enums\LandingPageStatus;
+use App\Modules\LandingPage\Support\TshirtLandingPageSlugValidator;
 use App\Policies\LandingPagePolicy;
 use Database\Factories\LandingPageFactory;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
@@ -25,8 +26,15 @@ class LandingPage extends Model
         'uuid',
         'name',
         'slug',
+        'is_tshirt_campaign',
         'status',
         'campaign_id',
+        'product_id',
+        'variant_id',
+        'external_hosting_provider',
+        'external_hosting_url',
+        'external_hosting_target',
+        'hosting_status',
         'template_id',
         'seo_title',
         'meta_description',
@@ -57,6 +65,7 @@ class LandingPage extends Model
             'archived_at' => 'datetime',
             'last_auto_saved_at' => 'datetime',
             'builder_json' => 'array',
+            'is_tshirt_campaign' => 'boolean',
         ];
     }
 
@@ -70,6 +79,16 @@ class LandingPage extends Model
             if (blank($page->slug) && filled($page->name)) {
                 $page->slug = static::uniqueSlug($page->name);
             }
+
+            if (filled($page->slug)) {
+                $page->slug = TshirtLandingPageSlugValidator::normalize((string) $page->slug);
+            }
+        });
+
+        static::saving(function (LandingPage $page): void {
+            if (filled($page->slug)) {
+                $page->slug = TshirtLandingPageSlugValidator::normalize((string) $page->slug);
+            }
         });
     }
 
@@ -80,9 +99,30 @@ class LandingPage extends Model
 
     public function publicUrl(): string
     {
+        if ($this->is_tshirt_campaign) {
+            $tshirtUrl = app(\App\Modules\LandingPage\Services\TshirtLandingPageUrlGenerator::class)
+                ->forLandingPage($this);
+
+            if ($tshirtUrl !== null) {
+                return $tshirtUrl;
+            }
+        }
+
         $prefix = trim((string) config('landing_pages.public_path_prefix', 'offer'), '/');
 
         return url('/'.$prefix.'/'.$this->slug);
+    }
+
+    public function legacyOfferUrl(): string
+    {
+        $prefix = trim((string) config('landing_pages.public_path_prefix', 'offer'), '/');
+
+        return url('/'.$prefix.'/'.$this->slug);
+    }
+
+    public function canonicalPublicUrl(): string
+    {
+        return $this->publicUrl();
     }
 
     public function conversionRate(): float
@@ -97,6 +137,16 @@ class LandingPage extends Model
     public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(Variant::class);
     }
 
     public function template(): BelongsTo

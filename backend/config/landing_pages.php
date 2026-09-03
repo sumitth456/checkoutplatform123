@@ -20,4 +20,21 @@ return [
             'js' => (int) env('LANDING_PAGES_ASSETS_MAX_KB_JS', 2048),
         ],
     ],
+
+    'tshirt' => [
+        'domain' => env('TSHIRT_LANDING_DOMAIN'),
+        'use_https' => filter_var(env('TSHIRT_LANDING_USE_HTTPS', true), FILTER_VALIDATE_BOOLEAN),
+        'reserved_slugs' => [
+            'www',
+            'admin',
+            'api',
+            'app',
+            'mail',
+            'smtp',
+            'ftp',
+            'cdn',
+            'assets',
+            'static',
+        ],
+    ],
 ];

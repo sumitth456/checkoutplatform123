@@ -11,10 +11,18 @@
     @if(filled($page->og_image_path))
         <meta property="og:image" content="{{ asset($page->og_image_path) }}">
     @endif
+    @if(! empty($canonicalUrl))
+        <link rel="canonical" href="{{ $canonicalUrl }}">
+    @endif
     @if($checkoutContext)
         @php($stripePublishableKey = config('payment.providers.stripe.publishable_key'))
+        @php($paypalFrontend = app(\App\Modules\PayPal\Services\PayPalConfigResolver::class)->publicFrontendConfig())
+        @php($paypalActive = \App\Models\PaymentGatewayConfig::query()->where('provider', 'paypal')->where('is_active', true)->exists() && filled($paypalFrontend['client_id'] ?? null))
         @if(filled($stripePublishableKey))
             <script src="https://js.stripe.com/v3/"></script>
+        @endif
+        @if($paypalActive)
+            <script src="{{ ($paypalFrontend['test_mode'] ?? false) ? 'https://www.sandbox.paypal.com/sdk/js' : 'https://www.paypal.com/sdk/js' }}?client-id={{ urlencode($paypalFrontend['client_id']) }}&components=card-fields&intent=capture&currency={{ urlencode($paypalFrontend['currency'] ?? 'USD') }}" defer></script>
         @endif
         <script type="application/json" id="landing-page-checkout-context">@json($checkoutContext)</script>
     @endif
@@ -22,6 +30,13 @@
         window.LandingPageCheckout = {
             apiUrl: @json($checkoutContext['checkout_api_url'] ?? url('/api/v1/checkout')),
             paymentIntentUrl: @json($checkoutContext['payment_intent_api_url'] ?? url('/api/v1/checkout/payment-intent')),
+            paypalCreateOrderUrl: @json(url('/api/v1/checkout/paypal/orders')),
+            paypalCaptureOrderUrl: @json(url('/api/v1/checkout/paypal/orders')),
+            paypalConfigUrl: @json(url('/api/v1/checkout/paypal/config')),
+            paypalEnabled: @json($paypalActive),
+            paypalClientId: @json($paypalActive ? ($paypalFrontend['client_id'] ?? null) : null),
+            paypalTestMode: @json($paypalActive ? (bool) ($paypalFrontend['test_mode'] ?? false) : false),
+            paypalCurrency: @json($paypalActive ? ($paypalFrontend['currency'] ?? 'USD') : 'USD'),
             calculateUrl: @json($checkoutContext['urls']['calculate'] ?? null),
             couponValidateUrl: @json($checkoutContext['urls']['coupon_validate'] ?? null),
             csrfToken: @json(csrf_token()),
@@ -65,7 +80,8 @@
 <script src="{{ asset('js/landing-page-checkout.js') }}" defer></script>
 <script>{!! $renderedJs ?? $page->content_js !!}</script>
 <script src="{{ asset('js/ach-checkout.js') }}?v=1"></script>
-<script src="{{ asset('js/landing-page-legacy-checkout.js') }}?v=7"></script>
+<script src="{{ asset('js/paypal-checkout.js') }}?v=4"></script>
+<script src="{{ asset('js/landing-page-legacy-checkout.js') }}?v=12"></script>
 @if(filled($page->custom_footer_scripts))
     {!! $page->custom_footer_scripts !!}
 @endif
