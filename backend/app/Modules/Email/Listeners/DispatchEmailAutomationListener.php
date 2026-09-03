@@ -4,6 +4,7 @@ namespace App\Modules\Email\Listeners;
 
 use App\Modules\Email\Enums\EmailTrigger;
 use App\Modules\Email\Services\EmailAutomationService;
+use App\Modules\Order\Services\OrderTestDetector;
 use App\Modules\Order\Events\CheckoutPaymentFailed;
 use App\Modules\Order\Events\FulfillmentRecordCreated;
 use App\Modules\Order\Events\FulfillmentSubmittedToWarehouse;
@@ -24,6 +25,7 @@ final class DispatchEmailAutomationListener implements ShouldQueue
 
     public function __construct(
         private readonly EmailAutomationService $automations,
+        private readonly OrderTestDetector $testOrders,
     ) {
         $this->queue = (string) config('email.queue', 'default');
     }
@@ -62,16 +64,31 @@ final class DispatchEmailAutomationListener implements ShouldQueue
     {
         $order = $event->fulfillment->order;
 
-        if ($order !== null) {
-            $metadata = $order->metadata ?? [];
-            $metadata['tracking_number'] = $event->response->trackingNumber ?? ($metadata['tracking_number'] ?? null);
-            $metadata['tracking_url'] = $event->response->trackingUrl ?? ($metadata['tracking_url'] ?? null);
-            $metadata['carrier'] = $event->response->carrier ?? ($metadata['carrier'] ?? null);
-            $order->forceFill(['metadata' => $metadata])->save();
-
-            $this->automations->trigger(EmailTrigger::OrderShipped, $order->fresh());
-            $this->automations->trigger(EmailTrigger::TrackingEmail, $order->fresh());
+        if ($order === null) {
+            return;
         }
+
+        if ($event->response->skipCustomerNotification || $event->response->shipmentOnly) {
+            return;
+        }
+
+        if ($this->testOrders->isTestOrder($order)) {
+            return;
+        }
+
+        if (blank($event->response->trackingNumber)) {
+            return;
+        }
+
+        $metadata = $order->metadata ?? [];
+        $metadata['tracking_number'] = $event->response->trackingNumber ?? ($metadata['tracking_number'] ?? null);
+        $metadata['tracking_url'] = $event->response->trackingUrl ?? ($metadata['tracking_url'] ?? null);
+        $metadata['carrier'] = $event->response->carrier ?? ($metadata['carrier'] ?? null);
+        $order->forceFill(['metadata' => $metadata])->save();
+
+        $freshOrder = $order->fresh();
+        $this->automations->trigger(EmailTrigger::OrderShipped, $freshOrder);
+        $this->automations->trigger(EmailTrigger::TrackingEmail, $freshOrder);
     }
 
     public function handleSubscriptionCreated(SubscriptionCreated $event): void

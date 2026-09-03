@@ -33,6 +33,10 @@ final class HttpEmailProviderDriver implements EmailProviderDriverInterface
             return new EmailSendResult(success: false, error: 'API key is required.');
         }
 
+        if ($provider->provider_type === EmailProviderType::Mailjet) {
+            return $this->testMailjetConnection($provider);
+        }
+
         return new EmailSendResult(success: true, response: ['message' => 'API credentials present']);
     }
 
@@ -129,16 +133,35 @@ final class HttpEmailProviderDriver implements EmailProviderDriverInterface
 
     private function sendMailjet(EmailProvider $provider, EmailSendRequest $request): EmailSendResult
     {
-        $response = Http::withBasicAuth((string) $provider->api_key, (string) $provider->secret_key)
+        if (blank($provider->secret_key)) {
+            return new EmailSendResult(success: false, error: 'Mailjet secret key is required.');
+        }
+
+        $message = [
+            'From' => ['Email' => $provider->from_email, 'Name' => $provider->from_name],
+            'To' => [['Email' => $request->toEmail, 'Name' => $request->toName ?: $request->toEmail]],
+            'Subject' => $request->subject,
+            'HTMLPart' => $request->htmlBody,
+        ];
+
+        if (filled($request->plainTextBody)) {
+            $message['TextPart'] = $request->plainTextBody;
+        } elseif (filled($request->htmlBody)) {
+            $message['TextPart'] = trim(strip_tags($request->htmlBody));
+        }
+
+        if ($request->replyToEmail) {
+            $message['ReplyTo'] = [
+                'Email' => $request->replyToEmail,
+                'Name' => $request->replyToName ?: $request->replyToEmail,
+            ];
+        }
+
+        $response = Http::timeout(30)
+            ->withBasicAuth((string) $provider->api_key, (string) $provider->secret_key)
+            ->acceptJson()
             ->post('https://api.mailjet.com/v3/send', [
-                'Messages' => [[
-                    'From' => ['Email' => $provider->from_email, 'Name' => $provider->from_name],
-                    'To' => [['Email' => $request->toEmail, 'Name' => $request->toName]],
-                    'Subject' => $request->subject,
-                    'HTMLPart' => $request->htmlBody,
-                    'TextPart' => $request->plainTextBody,
-                    'ReplyTo' => $request->replyToEmail ? ['Email' => $request->replyToEmail, 'Name' => $request->replyToName] : null,
-                ]],
+                'Messages' => [$message],
             ]);
 
         if ($response->successful()) {
@@ -146,12 +169,63 @@ final class HttpEmailProviderDriver implements EmailProviderDriverInterface
 
             return new EmailSendResult(
                 success: true,
-                messageId: data_get($json, 'Messages.0.To.0.MessageID'),
-                response: $json,
+                messageId: (string) data_get($json, 'Messages.0.To.0.MessageID', data_get($json, 'Messages.0.MessageID')),
+                response: array_merge(is_array($json) ? $json : [], [
+                    'provider' => EmailProviderType::Mailjet->value,
+                    'http_status' => $response->status(),
+                ]),
             );
         }
 
-        return new EmailSendResult(success: false, error: $response->body(), response: ['status' => $response->status()]);
+        return new EmailSendResult(
+            success: false,
+            error: $this->formatMailjetError($response->json(), $response->body(), $response->status()),
+            response: ['status' => $response->status(), 'provider' => EmailProviderType::Mailjet->value],
+        );
+    }
+
+    private function testMailjetConnection(EmailProvider $provider): EmailSendResult
+    {
+        if (blank($provider->secret_key)) {
+            return new EmailSendResult(success: false, error: 'Mailjet secret key is required.');
+        }
+
+        $response = Http::timeout(15)
+            ->withBasicAuth((string) $provider->api_key, (string) $provider->secret_key)
+            ->acceptJson()
+            ->get('https://api.mailjet.com/v3/REST/user');
+
+        if ($response->successful()) {
+            return new EmailSendResult(
+                success: true,
+                response: [
+                    'message' => 'Mailjet API credentials verified',
+                    'http_status' => $response->status(),
+                ],
+            );
+        }
+
+        return new EmailSendResult(
+            success: false,
+            error: $this->formatMailjetError($response->json(), $response->body(), $response->status()),
+            response: ['http_status' => $response->status()],
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $json
+     */
+    private function formatMailjetError(?array $json, string $body, int $status): string
+    {
+        $message = data_get($json, 'ErrorMessage')
+            ?? data_get($json, 'Messages.0.Errors.0.ErrorMessage')
+            ?? data_get($json, 'Messages.0.Status');
+
+        if (filled($message)) {
+            return "Mailjet API error (HTTP {$status}): {$message}";
+        }
+
+        return "Mailjet API error (HTTP {$status})";
     }
 
     private function sendSes(EmailProvider $provider, EmailSendRequest $request): EmailSendResult

@@ -4,9 +4,11 @@ namespace App\Modules\Email;
 
 use App\Models\EmailTemplate;
 use App\Modules\Email\Console\ProcessEmailQueueCommand;
+use App\Modules\Email\Console\SyncMailjetProviderCommand;
 use App\Modules\Email\Listeners\DispatchEmailAutomationListener;
 use App\Modules\Email\Observers\EmailTemplateObserver;
 use App\Modules\Email\Providers\HttpEmailProviderDriver;
+use App\Modules\Email\Providers\KlaviyoEmailProviderDriver;
 use App\Modules\Email\Providers\SmtpEmailProviderDriver;
 use App\Modules\Email\Services\EmailAnalyticsService;
 use App\Modules\Email\Services\EmailAutomationService;
@@ -14,6 +16,7 @@ use App\Modules\Email\Services\EmailDispatchService;
 use App\Modules\Email\Services\EmailProviderManager;
 use App\Modules\Email\Services\EmailTemplateRenderer;
 use App\Modules\Email\Services\EmailVariableResolver;
+use App\Modules\Email\Services\MailjetProviderBootstrapService;
 use App\Modules\Order\Events\CheckoutPaymentFailed;
 use App\Modules\Order\Events\FulfillmentRecordCreated;
 use App\Modules\Order\Events\FulfillmentSubmittedToWarehouse;
@@ -45,6 +48,7 @@ class EmailServiceProvider extends ServiceProvider
         $this->app->singleton(EmailDispatchService::class);
         $this->app->singleton(EmailAutomationService::class);
         $this->app->singleton(EmailAnalyticsService::class);
+        $this->app->singleton(MailjetProviderBootstrapService::class);
     }
 
     public function boot(): void
@@ -53,6 +57,7 @@ class EmailServiceProvider extends ServiceProvider
 
         $this->commands([
             ProcessEmailQueueCommand::class,
+            SyncMailjetProviderCommand::class,
         ]);
 
         $listener = DispatchEmailAutomationListener::class;

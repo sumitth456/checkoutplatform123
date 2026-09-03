@@ -13,9 +13,13 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Modules\Email\Enums\EmailProviderStatus;
 use App\Modules\Email\Enums\EmailTrigger;
+use App\Modules\Email\Data\EmailSendRequest;
+use App\Modules\Email\Enums\EmailProviderType;
+use App\Modules\Email\Providers\HttpEmailProviderDriver;
 use App\Modules\Email\Services\EmailAutomationService;
 use App\Modules\Email\Services\EmailDispatchService;
 use App\Modules\Email\Services\EmailProviderManager;
+use App\Modules\Email\Services\MailjetProviderBootstrapService;
 use App\Modules\Email\Support\KlaviyoFlowSetup;
 use App\Modules\Order\Events\OrderPlaced;
 use Illuminate\Support\Str;
@@ -63,6 +67,99 @@ if ($action === 'inspect') {
     }
 
     exit(0);
+}
+
+if ($action === 'sync-mailjet-provider') {
+    $bootstrap = app(MailjetProviderBootstrapService::class);
+
+    if (! $bootstrap->isConfigured()) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'MAILJET_API_KEY and MAILJET_SECRET_KEY must be set.',
+        ], JSON_PRETTY_PRINT)."\n";
+        exit(1);
+    }
+
+    $provider = $bootstrap->syncFromEnvironment();
+
+    echo json_encode([
+        'success' => true,
+        'provider_id' => $provider?->id,
+        'name' => $provider?->name,
+        'from_email' => $provider?->from_email,
+        'is_default' => $provider?->is_default,
+    ], JSON_PRETTY_PRINT)."\n";
+    exit(0);
+}
+
+if ($action === 'test-mailjet') {
+    app(MailjetProviderBootstrapService::class)->syncFromEnvironment();
+
+    $provider = EmailProvider::query()
+        ->where('provider_type', EmailProviderType::Mailjet)
+        ->where('status', EmailProviderStatus::Enabled)
+        ->orderByDesc('is_default')
+        ->first();
+
+    if ($provider === null) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'No enabled Mailjet provider. Run sync-mailjet-provider after setting MAILJET_* env vars.',
+        ], JSON_PRETTY_PRINT)."\n";
+        exit(1);
+    }
+
+    $result = app(EmailProviderManager::class)->testProvider($provider);
+
+    echo json_encode([
+        'provider' => $provider->name,
+        'from' => $provider->from_email,
+        'success' => $result->success,
+        'error' => $result->error,
+        'response' => $result->response,
+    ], JSON_PRETTY_PRINT)."\n";
+    exit($result->success ? 0 : 1);
+}
+
+if ($action === 'send-mailjet-test') {
+    $email = $argv[2] ?? null;
+
+    if (! is_string($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        echo "Usage: php scripts/email-admin.php send-mailjet-test recipient@example.com\n";
+        exit(1);
+    }
+
+    app(MailjetProviderBootstrapService::class)->syncFromEnvironment();
+
+    $provider = EmailProvider::query()
+        ->where('provider_type', EmailProviderType::Mailjet)
+        ->where('status', EmailProviderStatus::Enabled)
+        ->orderByDesc('is_default')
+        ->firstOrFail();
+
+    $request = new EmailSendRequest(
+        toEmail: $email,
+        toName: 'CheckoutPlatform Admin',
+        subject: 'CheckoutPlatform Mailjet Test Email',
+        htmlBody: '<p><strong>CheckoutPlatform Mailjet Test Email</strong></p><p>This is a safe delivery test. No order, ShipStation shipment, label, or tracking was created.</p>',
+        plainTextBody: 'CheckoutPlatform Mailjet Test Email — safe delivery test. No order or shipment was created.',
+        replyToEmail: $provider->reply_to_email,
+        replyToName: $provider->reply_to_name,
+        metadata: ['type' => 'mailjet_safe_test'],
+    );
+
+    $result = app(HttpEmailProviderDriver::class)->send($provider, $request);
+
+    echo json_encode([
+        'recipient' => $email,
+        'subject' => 'CheckoutPlatform Mailjet Test Email',
+        'success' => $result->success,
+        'message_id' => $result->messageId,
+        'error' => $result->error,
+        'provider' => $provider->name,
+    ], JSON_PRETTY_PRINT)."\n";
+
+    exit($result->success ? 0 : 1);
 }
 
 if ($action === 'test-smtp') {
@@ -365,5 +462,5 @@ if ($action === 'mail-config') {
     exit(0);
 }
 
-echo "Usage: php scripts/email-admin.php inspect|fix-gmail-provider|export-mail-env|verify-mail-config|test-smtp|test-klaviyo|set-klaviyo-default|klaviyo-flow-setup|send-test|trigger-order-email|verify-order-email-resilience|mail-config [email]\n";
+echo "Usage: php scripts/email-admin.php inspect|sync-mailjet-provider|test-mailjet|send-mailjet-test|fix-gmail-provider|export-mail-env|verify-mail-config|test-smtp|test-klaviyo|set-klaviyo-default|klaviyo-flow-setup|send-test|trigger-order-email|verify-order-email-resilience|mail-config [email]\n";
 exit(1);

@@ -14,6 +14,8 @@ readonly class WarehouseShipmentResponseDTO
         public ShipmentStatus $shipmentStatus,
         public DeliveryStatus $deliveryStatus,
         public array $raw = [],
+        public bool $shipmentOnly = false,
+        public bool $skipCustomerNotification = false,
     ) {}
 
     public static function fromArray(array $data): self

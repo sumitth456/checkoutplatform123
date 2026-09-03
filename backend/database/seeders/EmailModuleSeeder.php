@@ -26,6 +26,25 @@ class EmailModuleSeeder extends Seeder
             return;
         }
 
+        if (filled(env('MAILJET_API_KEY')) && filled(env('MAILJET_SECRET_KEY'))) {
+            EmailProvider::query()->create([
+                'uuid' => (string) Str::uuid(),
+                'name' => 'Mailjet',
+                'provider_type' => EmailProviderType::Mailjet,
+                'api_key' => env('MAILJET_API_KEY'),
+                'secret_key' => env('MAILJET_SECRET_KEY'),
+                'from_name' => env('MAIL_FROM_NAME', config('app.name')),
+                'from_email' => env('MAIL_FROM_ADDRESS', 'noreply@checkoutplatform.test'),
+                'reply_to_email' => env('MAIL_REPLY_TO', env('MAIL_FROM_ADDRESS')),
+                'reply_to_name' => env('MAIL_FROM_NAME', config('app.name')),
+                'status' => EmailProviderStatus::Enabled,
+                'priority' => 1,
+                'is_default' => true,
+            ]);
+
+            return;
+        }
+
         EmailProvider::query()->create([
             'uuid' => (string) Str::uuid(),
             'name' => 'Default SMTP',
