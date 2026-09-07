@@ -160,7 +160,7 @@ final class HttpEmailProviderDriver implements EmailProviderDriverInterface
         $response = Http::timeout(30)
             ->withBasicAuth((string) $provider->api_key, (string) $provider->secret_key)
             ->acceptJson()
-            ->post('https://api.mailjet.com/v3/send', [
+            ->post('https://api.mailjet.com/v3.1/send', [
                 'Messages' => [$message],
             ]);
 

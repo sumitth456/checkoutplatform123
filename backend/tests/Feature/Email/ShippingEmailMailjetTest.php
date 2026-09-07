@@ -49,7 +49,7 @@ class ShippingEmailMailjetTest extends TestCase
         ]);
 
         Http::fake([
-            'api.mailjet.com/v3/send' => Http::response([
+            'api.mailjet.com/v3.1/send' => Http::response([
                 'Messages' => [[
                     'Status' => 'success',
                     'To' => [['Email' => 'ship@example.com', 'MessageID' => 987654321]],
@@ -102,7 +102,7 @@ class ShippingEmailMailjetTest extends TestCase
         $this->assertStringContainsString('782758401696', (string) $log->html_body);
         $this->assertSame('Mailjet Production', $log->provider_response['provider_name'] ?? null);
 
-        Http::assertSent(fn ($request): bool => str_contains($request->url(), 'api.mailjet.com/v3/send'));
+        Http::assertSent(fn ($request): bool => str_contains($request->url(), 'api.mailjet.com/v3.1/send'));
     }
 
     #[Test]
@@ -202,7 +202,7 @@ class ShippingEmailMailjetTest extends TestCase
     public function email_failure_does_not_change_order_fulfillment_state(): void
     {
         Http::fake([
-            'api.mailjet.com/v3/send' => Http::response(['ErrorMessage' => 'Temporary outage'], 503),
+            'api.mailjet.com/v3.1/send' => Http::response(['ErrorMessage' => 'Temporary outage'], 503),
         ]);
 
         $order = Order::factory()->create([

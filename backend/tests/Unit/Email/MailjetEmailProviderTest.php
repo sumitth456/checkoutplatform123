@@ -56,7 +56,7 @@ class MailjetEmailProviderTest extends TestCase
     public function mailjet_driver_sends_transactional_email_with_expected_payload(): void
     {
         Http::fake([
-            'api.mailjet.com/v3/send' => Http::response([
+            'api.mailjet.com/v3.1/send' => Http::response([
                 'Messages' => [[
                     'Status' => 'success',
                     'To' => [['Email' => 'customer@example.com', 'MessageID' => 123456789]],
@@ -91,7 +91,7 @@ class MailjetEmailProviderTest extends TestCase
         $this->assertSame('123456789', $result->messageId);
 
         Http::assertSent(function ($request): bool {
-            if (! str_contains($request->url(), 'api.mailjet.com/v3/send')) {
+            if (! str_contains($request->url(), 'api.mailjet.com/v3.1/send')) {
                 return false;
             }
 
