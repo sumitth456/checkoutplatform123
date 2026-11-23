@@ -12,6 +12,8 @@ final class AdminNavigationGroup
 
     public const GATEWAYS = 'Gateways';
 
+    public const ANALYTICS = 'Analytics';
+
     public const ADMIN = 'Admin';
 }
 
