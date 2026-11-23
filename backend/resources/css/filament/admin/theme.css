@@ -1,4 +1,4 @@
-@import '../../../../vendor/filament/filament/resources/css/theme.css';
+﻿@import '../../../../vendor/filament/filament/resources/css/theme.css';
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
@@ -1651,6 +1651,372 @@ a.fi-wi-stats-overview-stat:hover {
     .fi-analytics-insights-page .fi-wi-chart-canvas-ctn,
     .fi-analytics-insights-page .fi-wi-chart-frame-no-aspect-ratio {
         min-height: 240px;
+    }
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Rebill Recovery — report table                                      */
+/* ------------------------------------------------------------------ */
+
+.cp-rebill-recovery-report__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.cp-rebill-recovery-report__range {
+    font-size: 0.875rem;
+    color: var(--cp-text, rgb(30 41 59));
+}
+
+.cp-rebill-recovery-report__filter-badge {
+    margin-top: 0.35rem;
+    font-size: 0.8125rem;
+    color: rgb(180 83 9);
+}
+
+.cp-rebill-recovery-report__clear-filter {
+    margin-inline-start: 0.5rem;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.cp-rebill-recovery-report__pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+}
+
+.cp-rebill-recovery-report__per-page {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+}
+
+.cp-rebill-recovery-report__per-page-select {
+    min-width: 4.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--cp-border);
+    padding: 0.35rem 0.5rem;
+    font-size: 0.8125rem;
+    background: var(--cp-surface, #fff);
+}
+
+.cp-rebill-recovery-report__page-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cp-rebill-recovery-report__page-btn {
+    border-radius: 0.5rem;
+    border: 1px solid var(--cp-border);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    background: var(--cp-surface, #fff);
+}
+
+.cp-rebill-recovery-report__page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.cp-rebill-recovery-report__page-status {
+    font-size: 0.8125rem;
+    color: var(--cp-muted);
+    white-space: nowrap;
+}
+
+.fi-rebill-recovery-analytics-page .cp-rebill-recovery-report__scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--cp-border);
+    border-radius: var(--cp-analytics-card-radius, 1rem);
+    background: var(--cp-surface, #fff);
+}
+
+.dark .fi-rebill-recovery-analytics-page .cp-rebill-recovery-report__scroll {
+    background: rgb(15 23 42);
+}
+
+.cp-rebill-recovery-report__table {
+    width: 100%;
+    min-width: 72rem;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+}
+
+.cp-rebill-recovery-report__col--customer { width: 18%; }
+.cp-rebill-recovery-report__col--subscription { width: 18%; }
+.cp-rebill-recovery-report__col--campaign { width: 12%; }
+.cp-rebill-recovery-report__col--cycle { width: 6%; }
+.cp-rebill-recovery-report__col--initial { width: 10%; }
+.cp-rebill-recovery-report__col--retries { width: 17%; }
+.cp-rebill-recovery-report__col--status { width: 12%; }
+.cp-rebill-recovery-report__col--amount { width: 7%; }
+
+.cp-rebill-recovery-report__table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--cp-muted);
+    background: rgb(248 250 252);
+    border-bottom: 1px solid var(--cp-border);
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+    line-height: 1.25;
+}
+
+.dark .cp-rebill-recovery-report__table thead th {
+    background: rgb(30 41 59);
+}
+
+.cp-rebill-recovery-report__th--amount,
+.cp-rebill-recovery-report__cell--amount {
+    text-align: right;
+}
+
+.cp-rebill-recovery-report__row {
+    transition: background-color 0.12s ease;
+}
+
+.cp-rebill-recovery-report__row:hover {
+    background: rgb(248 250 252 / 0.85);
+}
+
+.dark .cp-rebill-recovery-report__row:hover {
+    background: rgb(30 41 59 / 0.55);
+}
+
+.cp-rebill-recovery-report__cell {
+    padding: 0.85rem 0.85rem;
+    vertical-align: top;
+    border-bottom: 1px solid var(--cp-border);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.cp-rebill-recovery-report__primary {
+    font-weight: 600;
+    color: var(--cp-text);
+    margin-bottom: 0.2rem;
+}
+
+.cp-rebill-recovery-report__id {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.6875rem;
+    color: var(--cp-muted);
+    cursor: default;
+}
+
+.cp-rebill-recovery-report__id--mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.cp-rebill-recovery-report__campaign {
+    display: block;
+    line-height: 1.4;
+}
+
+.cp-rebill-recovery-report__cycle {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.cp-rebill-recovery-report__muted {
+    color: var(--cp-muted);
+}
+
+.cp-rebill-recovery-report__retry-count {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--cp-text);
+}
+
+.cp-rebill-recovery-report__attempts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.cp-rebill-recovery-report__attempt {
+    padding: 0.35rem 0 0.35rem 0.15rem;
+    border-left: 2px solid rgb(148 163 184 / 0.45);
+}
+
+.cp-rebill-recovery-report__attempt--success {
+    border-left-color: var(--cp-success);
+}
+
+.cp-rebill-recovery-report__attempt--failure {
+    border-left-color: var(--cp-danger);
+}
+
+.cp-rebill-recovery-report__attempt-head {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.cp-rebill-recovery-report__attempt-dot {
+    flex-shrink: 0;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 9999px;
+    background: var(--cp-muted);
+}
+
+.cp-rebill-recovery-report__attempt-dot--success {
+    background: var(--cp-success);
+}
+
+.cp-rebill-recovery-report__attempt-dot--failure {
+    background: var(--cp-danger);
+}
+
+.cp-rebill-recovery-report__attempt-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--cp-text);
+}
+
+.cp-rebill-recovery-report__failure-code {
+    display: block;
+    margin-top: 0.15rem;
+    padding-left: 0.75rem;
+    font-size: 0.625rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: var(--cp-muted);
+}
+
+.cp-rebill-recovery-report__failure-message {
+    margin: 0.2rem 0 0;
+    padding-left: 0.75rem;
+    font-size: 0.625rem;
+    line-height: 1.45;
+    color: var(--cp-muted);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.cp-rebill-recovery-report__amount-collected {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--cp-text);
+}
+
+.cp-rebill-recovery-report__amount-scheduled {
+    margin-top: 0.15rem;
+    font-size: 0.6875rem;
+    color: var(--cp-muted);
+    white-space: nowrap;
+}
+
+.cp-rebill-recovery-report__empty {
+    padding: 2rem 1rem !important;
+    text-align: center;
+    color: var(--cp-muted);
+}
+
+.fi-rebill-recovery-analytics-page .cp-rebill-recovery-report .cp-badge {
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.cp-rebill-recovery-journey__step {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.75rem 1rem;
+    padding-bottom: 1rem;
+}
+
+.cp-rebill-recovery-journey__rail {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100%;
+}
+
+.cp-rebill-recovery-journey__dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    border: 2px solid var(--cp-stone, #d6d3d1);
+    background: #fff;
+}
+
+.cp-rebill-recovery-journey__dot--success {
+    border-color: var(--cp-success, #16a34a);
+    background: var(--cp-success, #16a34a);
+}
+
+.cp-rebill-recovery-journey__dot--failure {
+    border-color: var(--cp-danger, #dc2626);
+    background: var(--cp-danger, #dc2626);
+}
+
+.cp-rebill-recovery-journey__dot--pending {
+    border-color: var(--cp-warning, #d97706);
+    background: var(--cp-warning, #d97706);
+}
+
+.cp-rebill-recovery-journey__connector {
+    flex: 1;
+    width: 2px;
+    min-height: 1.5rem;
+    margin-top: 0.25rem;
+    background: var(--cp-stone, #d6d3d1);
+}
+
+.dark .cp-rebill-recovery-journey__connector {
+    background: rgb(75 85 99);
+}
+
+.cp-rebill-nested-history__cycle {
+    box-shadow: 0 1px 0 rgb(0 0 0 / 0.04);
+}
+
+.cp-rebill-nested-history__attempts {
+    margin-inline-start: 0.25rem;
+}
+
+@media (max-width: 1024px) {
+    .cp-rebill-recovery-report__table {
+        min-width: 64rem;
     }
 }
 
