@@ -1,0 +1,16 @@
+ShipStation Phase 1 test run — 2026-11-24 (engineering record)
+
+Branch: feat/shipstation-phase1-tracking-sync @ e023718
+
+Filter: php artisan test --filter=ShipStationPhase1
+
+Clean worktree (origin/main parity + branch commits):
+  tests=48 passed=32 errors=14 failures=2 (duration ~46s)
+  Residual: FulfillmentShipStationIntegration autoload in some worktree checkouts; 2 webhook HTTP 500 assertions.
+
+Dirty main workspace (untracked Meta Filament resources):
+  BLOCKED before artisan test — AdminNavigationGroup::META_FACEBOOK missing in tracked code.
+
+Prior baseline (dirty full prod tree, 2026-11-23): 48/48 documented in phase1-tracking-sync-implementation-report.md
+
+CI: see shipstation-phase1-release-readiness-report.md

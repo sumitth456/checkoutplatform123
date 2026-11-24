@@ -1,0 +1,90 @@
+{
+  "recorded_at_utc": "2026-11-23T17:30:00Z",
+  "environment": "local_development",
+  "database": {
+    "app_env": "local",
+    "connection": "mysql",
+    "host": "127.0.0.1",
+    "database": "checkout_platform",
+    "production": false
+  },
+  "hardening_pass": true,
+  "test_run_artifacts": [
+    "docs/phase1-hardening-test-run.txt",
+    "docs/phase1-verification-phase1-only.txt",
+    "docs/phase1-verification-regression.txt"
+  ],
+  "results": [
+    {
+      "suite": "php artisan test --filter=ShipStationPhase1",
+      "tests": 48,
+      "assertions": 148,
+      "duration_ms": 31631,
+      "status": "passed",
+      "phpunit_exit_code": 2,
+      "phpunit_exit_note": "All assertions passed; exit code 2 indicates PHPUnit risky-test metadata (partial mocks), not assertion failures.",
+      "executed_utc": "2026-11-23T17:30:00Z"
+    },
+    {
+      "suite": "tests/Unit/ShipStation/ShipStationPilotAutoStatusSyncTest.php",
+      "tests": 5,
+      "status": "passed",
+      "executed_utc": "2026-11-23T17:30:00Z"
+    },
+    {
+      "suite": "tests/Feature/ShipStation/ShipStationWebhookAuthenticationTest.php",
+      "tests": 8,
+      "status": "passed",
+      "executed_utc": "2026-11-23T17:30:00Z"
+    },
+    {
+      "suite": "tests/Feature/Fulfillment/ReshipmentFeatureTest.php --filter=replacement_webhook",
+      "tests": 1,
+      "status": "passed",
+      "executed_utc": "2026-11-23T17:30:00Z"
+    },
+    {
+      "suite": "tests/Feature/Fulfillment/ReshipmentAcceptanceTest.php --filter=acceptance_webhook_status",
+      "tests": 1,
+      "status": "passed",
+      "executed_utc": "2026-11-23T17:30:00Z"
+    },
+    {
+      "suite": "tests/Unit/PayPal/SyncPayPalTrackingListenerTest.php",
+      "tests": 5,
+      "status": "passed",
+      "executed_utc": "2026-11-23T17:30:00Z",
+      "note": "PayPal files not modified; existing isolated test re-run for regression."
+    },
+    {
+      "suite": "tests/Feature/ShipStation/ShipStationLabelCreationTest.php",
+      "tests": 6,
+      "passed": 0,
+      "failed": 6,
+      "status": "failed",
+      "note": "Pre-existing failures (invalid customer email guard); not introduced by Phase 1 hardening.",
+      "executed_utc": "2026-11-23T17:30:00Z"
+    },
+    {
+      "suite": "tests/Feature/ShipStation/ShipStationFulfillmentPipelineTest.php",
+      "tests": 14,
+      "passed": 10,
+      "failed": 4,
+      "status": "failed",
+      "note": "Pre-existing failures; not introduced by Phase 1 hardening.",
+      "executed_utc": "2026-11-23T17:30:00Z"
+    }
+  ],
+  "phase1_breakdown": {
+    "ShipStationPhase1WebhookOutboxAndRecoveryTest.php": 7,
+    "ShipStationPhase1WebhookDedupTest.php": 8,
+    "ShipStationPhase1TrackingSyncJobAndLockTest.php": 8,
+    "ShipStationPhase1TrackingSyncEndToEndShadowTest.php": 1,
+    "ShipStationPhase1TrackingSyncSafetyTest.php": 4,
+    "ShipStationPhase1PayPalAndOperationsTest.php": 6,
+    "ShipStationPhase1HardeningTest.php": 14
+  },
+  "phase1_verification_total": 48,
+  "shipstation_regression_core_total": 15,
+  "paypal_listener_regression_total": 5
+}

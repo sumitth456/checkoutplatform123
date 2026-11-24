@@ -17,6 +17,7 @@ return [
     App\Modules\LandingPage\LandingPageServiceProvider::class,
     App\Modules\Affiliate\AffiliateServiceProvider::class,
     App\Modules\Fulfillment\FulfillmentServiceProvider::class,
+    App\Modules\ShipStation\ShipStationServiceProvider::class,
     App\Modules\Email\EmailServiceProvider::class,
     App\Modules\Ach\AchServiceProvider::class,
 ];

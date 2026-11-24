@@ -1,0 +1,38 @@
+# G0 local restore test ONLY — isolated from main `docker-compose.yml`.
+# Usage:
+#   docker compose -p virello-g0-local-restore --env-file .env.g0-local-restore -f docker-compose.g0-local-restore.yml up -d
+#
+# Does NOT start app, worker, redis, or nginx. MySQL only.
+
+name: virello-g0-local-restore
+
+services:
+  g0_mysql:
+    image: mysql:8.4
+    container_name: virello_g0_restore_mysql
+    restart: "no"
+    ports:
+      - "127.0.0.1:33306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${G0_MYSQL_ROOT_PASSWORD:-g0_local_root_change_me}
+      MYSQL_DATABASE: ${G0_MYSQL_DATABASE:-g0_restore_checkout}
+    volumes:
+      - virello_g0_mysql_data:/var/lib/mysql
+      - ./.local/g0-restore/shipstation-display-status-20261120:/backup:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks:
+      - virello_g0_restore_net
+
+networks:
+  virello_g0_restore_net:
+    name: virello_g0_restore_net
+    driver: bridge
+
+volumes:
+  virello_g0_mysql_data:
+    name: virello_g0_mysql_data

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -78,6 +79,10 @@ class Order extends Model
         'cancelled_at',
         'cancellation_reason',
         'metadata',
+        'shipstation_order_id',
+        'shipstation_status',
+        'shipstation_synced_at',
+        'shipstation_sync_error',
     ];
 
     protected function casts(): array
@@ -180,6 +185,11 @@ class Order extends Model
     public function fulfillments(): HasMany
     {
         return $this->hasMany(Fulfillment::class);
+    }
+
+    public function shipStationIntegration(): HasOne
+    {
+        return $this->hasOne(ShipStationIntegration::class);
     }
 
     public function paymentGateway(): BelongsTo
