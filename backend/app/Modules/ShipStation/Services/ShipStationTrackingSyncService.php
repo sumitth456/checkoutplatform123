@@ -90,15 +90,41 @@ final class ShipStationTrackingSyncService
         );
 
         if ($shadow) {
+            $wouldApply = is_array($result['would_apply'] ?? null) ? $result['would_apply'] : [];
+
             ShipStationIntegrationLog::query()->create([
                 'request_type' => 'tracking_sync:shadow',
                 'order_id' => $order->id,
                 'success' => true,
                 'context' => [
                     'receipt_uuid' => $receipt->uuid,
-                    'would_apply' => $result['would_apply'] ?? [],
+                    'would_apply' => $wouldApply,
                 ],
             ]);
+
+            if ($integration !== null && $wouldApply !== []) {
+                $history = data_get($integration->tracking_sync_meta, 'sync_history', []);
+                if (! is_array($history)) {
+                    $history = [];
+                }
+
+                $history[] = [
+                    'at' => now()->toIso8601String(),
+                    'source' => 'shadow_webhook',
+                    'shipment_status' => $wouldApply['shipment_status'] ?? null,
+                    'tracking_number' => $wouldApply['tracking_number'] ?? null,
+                    'description' => 'Shadow sync preview (business columns unchanged)',
+                ];
+
+                $integration->update([
+                    'tracking_sync_meta' => array_merge($integration->tracking_sync_meta ?? [], [
+                        'shadow_last_snapshot' => $wouldApply,
+                        'shadow_last_at' => now()->toIso8601String(),
+                        'last_receipt_uuid' => $receipt->uuid,
+                        'sync_history' => array_slice($history, -50),
+                    ]),
+                ]);
+            }
         }
 
         return $result;

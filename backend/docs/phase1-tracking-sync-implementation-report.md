@@ -14,6 +14,8 @@ Phase 1 global tracking sync is **implemented**, **hardened**, and **automated-t
 
 **Verdict: COMPLETE** for approved local/staging scope (including hardening gaps closure). Production activation remains **blocked**.
 
+**CRM tracking visibility (2026-11-24):** Order view infolist **Shipment tracking** panel — presenter `OrderCrmShipmentTrackingPresenter`; shadow previews via `tracking_sync_meta.shadow_last_snapshot` without mutating `tracking_number` on integration rows.
+
 **Evidence (executed):**
 - `php artisan test --filter=ShipStationPhase1` → **48/48 passed**, **148 assertions** (~31.6s)
 - Core ShipStation regression → **15/15 passed**
@@ -50,6 +52,11 @@ Phase 1 global tracking sync is **implemented**, **hardened**, and **automated-t
 | `ShipStationWebhookDeliveryDedupService.php` | Stable-ID dedup includes `received`, `dispatched`, `processing`, `processed` (excludes `failed`) |
 | `ShipStationServiceProvider.php` | Registers new services |
 | `ShipStationPhase1HardeningTest.php` | **New** — gap-closure tests |
+| `OrderCrmShipmentTrackingPresenter.php` | **New** — read-only CRM view model (integration + shadow meta + logs) |
+| `OrderInfolist.php` | Shipment tracking panel on order view |
+| `shipment-tracking-panel.blade.php` | Filament UI: copy tracking, history timeline |
+| `ShipStationTrackingSyncService.php` | Shadow mode persists `tracking_sync_meta` only (CRM preview) |
+| `OrderCrmShipmentTrackingPresenterTest.php` | **New** — CRM display unit tests |
 | `phase1-tracking-sync-baseline-tests.json` | Updated run manifest |
 | `docs/phase1-hardening-test-run.txt` | Command output artifact |
 

@@ -76,6 +76,10 @@ class ShipStationPhase1TrackingSyncEndToEndShadowTest extends ShipStationPhase1T
         $order->shipStationIntegration->refresh();
         $this->assertNull($order->shipStationIntegration->tracking_number);
         $this->assertSame(ShipStationOrderStatus::Processing, $order->shipStationIntegration->status);
+        $this->assertSame(
+            '1ZE2E999',
+            data_get($order->shipStationIntegration->tracking_sync_meta, 'shadow_last_snapshot.tracking_number'),
+        );
 
         $shadowLog = ShipStationIntegrationLog::query()
             ->where('request_type', 'tracking_sync:shadow')

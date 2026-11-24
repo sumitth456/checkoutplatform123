@@ -6,6 +6,7 @@ use App\Filament\Admin\Resources\Customers\CustomerResource;
 use App\Filament\Admin\Support\Infolists\AdminInfolistComponents;
 use App\Models\Order;
 use App\Modules\Admin\Services\OrderRebillDetailsService;
+use App\Modules\ShipStation\Support\OrderCrmShipmentTrackingPresenter;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\View as SchemaView;
@@ -42,6 +43,11 @@ class OrderInfolist
                         ];
                     }),
                 AdminInfolistComponents::activityTimeline('Order lifecycle'),
+                SchemaView::make('filament.admin.components.shipment-tracking-panel')
+                    ->columnSpanFull()
+                    ->viewData(fn (Order $record): array => [
+                        'tracking' => app(OrderCrmShipmentTrackingPresenter::class)->present($record),
+                    ]),
                 AdminInfolistComponents::detailsSection('Order details', [
                     Grid::make(3)->schema([
                         TextEntry::make('subtotal')->money(fn (Order $record) => $record->currency),

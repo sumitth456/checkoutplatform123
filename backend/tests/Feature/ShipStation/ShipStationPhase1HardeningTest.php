@@ -285,7 +285,12 @@ class ShipStationPhase1HardeningTest extends ShipStationPhase1TrackingSyncTestCa
             'tracking_number', 'status', 'external_shipment_id', 'tracking_sync_meta',
         ]);
 
-        $this->assertSame($integrationBefore, $integrationAfter);
+        $this->assertSame($integrationBefore['tracking_number'], $integrationAfter['tracking_number']);
+        $this->assertSame($integrationBefore['status'], $integrationAfter['status']);
+        $this->assertSame($integrationBefore['external_shipment_id'], $integrationAfter['external_shipment_id']);
+        $this->assertNull($integrationAfter['tracking_number']);
+        $this->assertArrayHasKey('shadow_last_snapshot', $integrationAfter['tracking_sync_meta'] ?? []);
+        $this->assertSame('1ZHARDEN', data_get($integrationAfter['tracking_sync_meta'], 'shadow_last_snapshot.tracking_number'));
         $this->assertSame(ShipStationOrderStatus::Processing, $order->shipStationIntegration->status);
     }
 
