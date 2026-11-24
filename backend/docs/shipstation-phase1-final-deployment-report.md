@@ -19,7 +19,7 @@ This document is the **controlled rollout package** for ShipStation Phase 1 glob
 |------|-------|
 | Current production commit | `53abb6c17962703433fce760d04d9d48bb437820` |
 | Phase 1 code on production today | **No** (`tracking_sync` absent from deployed `shipstation.php`) |
-| **Proposed deploy commit (PR #2)** | `eefcfd14d0398084caf73b24e9639e4d1271e874` (`feat/shipstation-phase1-tracking-sync`) — supersede if a newer reviewed commit is merged |
+| **Proposed deploy commit (PR #2)** | `75169db3e63390825edfef8bc596200f1fd903ed` (`feat/shipstation-phase1-tracking-sync`) — supersede if a newer reviewed commit is merged |
 | PR | https://github.com/sumitth456/checkoutplatform123/pull/2 |
 | `origin/main` @ prepare time | `84367d8` |
 | Pre-deploy backup artifact (known) | `.backups/shipstation-display-status-20261120/db-pre-deploy.sql.gz` (SHA-256 verified on host **2026-11-24**) |
