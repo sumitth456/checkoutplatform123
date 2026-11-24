@@ -52,11 +52,8 @@ final class ShipStationWebhookOrderResolver
 
         if ($resourceUrl !== '') {
             $host = parse_url($resourceUrl, PHP_URL_HOST);
-            if (! is_string($host) || ! in_array($host, $allowed, true)) {
-                return null;
-            }
-
-            if (preg_match('#/shipments/(se-[A-Za-z0-9-]+)#i', $resourceUrl, $matches)) {
+            if (is_string($host) && in_array($host, $allowed, true)
+                && preg_match('#/shipments/(se-[A-Za-z0-9-]+)#i', $resourceUrl, $matches)) {
                 return $matches[1];
             }
         }

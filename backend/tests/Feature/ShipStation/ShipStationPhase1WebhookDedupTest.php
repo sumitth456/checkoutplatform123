@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\ShipStationIntegration;
 use App\Models\ShipStationWebhookReceipt;
 use App\Modules\ShipStation\Jobs\SyncShipStationTrackingJob;
+use App\Modules\ShipStation\Services\ShipStationV2ApiClient;
 use App\Modules\ShipStation\Services\ShipStationWebhookDeliveryDedupService;
 use App\Modules\ShipStation\Services\ShipStationWebhookIngress;
 use Illuminate\Support\Carbon;
@@ -180,12 +181,20 @@ class ShipStationPhase1WebhookDedupTest extends ShipStationPhase1TrackingSyncTes
     {
         $pilotUuid = '6591d63b-f76a-4786-95ef-46fa27c62956';
 
+        $this->enableGlobalTrackingWebhookConfig();
         config([
-            'shipstation.mode' => 'mock',
-            'shipstation.tracking_sync.enabled' => true,
             'shipstation.pilot_auto_status_sync.enabled' => true,
             'shipstation.pilot_auto_status_sync.order_uuids' => [$pilotUuid],
         ]);
+        $this->seedActiveShipStationSetting();
+
+        $this->mock(ShipStationV2ApiClient::class, function ($mock): void {
+            $mock->shouldReceive('getShipment')->andReturn([
+                'shipment_id' => 'se-pilot-1',
+                'shipment_status' => 'shipped',
+                'tracking_number' => '1ZPILOT',
+            ]);
+        });
 
         $order = Order::factory()->create(['uuid' => $pilotUuid]);
         ShipStationIntegration::query()->create([
