@@ -19,6 +19,7 @@ use App\Modules\ShipStation\Services\ShipStationFamTeesDeferAutomaticShippingSer
 use App\Modules\ShipStation\Services\ShipStationIntegrationRecordService;
 use App\Modules\ShipStation\Services\ShipStationLabelService;
 use App\Modules\ShipStation\Services\ShipStationOrderEligibilityService;
+use App\Modules\ShipStation\Services\ShipStationOrderPaymentEnvironmentReader;
 use App\Modules\ShipStation\Services\ShipStationOrderSyncExclusionService;
 use App\Modules\ShipStation\Services\ShipStationOrderSyncService;
 use App\Modules\ShipStation\Services\ShipStationRebillGuard;
@@ -92,6 +93,7 @@ class ShipStationServiceProvider extends ServiceProvider
         $this->app->singleton(ShipStationOrderSyncExclusionService::class);
         $this->app->singleton(ShipStationAutoLabelEligibilityService::class);
         $this->app->singleton(ShipStationRebillGuard::class);
+        $this->app->singleton(ShipStationOrderPaymentEnvironmentReader::class);
         $this->app->singleton(ShipStationOrderEligibilityService::class);
         $this->app->singleton(ShipStationFulfillmentContext::class);
         $this->app->singleton(ShipStationDueFulfillmentService::class);

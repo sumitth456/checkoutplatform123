@@ -7,7 +7,6 @@ use App\Models\Transaction;
 use App\Modules\Order\Enums\OrderPaymentStatus;
 use App\Modules\Order\Services\OrderTestDetector;
 use App\Modules\Order\Support\CustomerEmailValidator;
-use App\Modules\PayPal\Services\PayPalConfigResolver;
 use App\Modules\ShipStation\Enums\ShipStationSyncStatus;
 use App\Modules\ShipStation\Support\ShipStationFaceShieldLineItemClassifier;
 use App\Modules\ShipStation\Support\ShipStationSubmissionDecision;
@@ -17,7 +16,7 @@ class ShipStationOrderEligibilityService
 {
     public function __construct(
         private readonly OrderTestDetector $testOrders,
-        private readonly PayPalConfigResolver $payPalConfigResolver,
+        private readonly ShipStationOrderPaymentEnvironmentReader $paymentEnvironment,
         private readonly ShipStationRebillGuard $rebillGuard,
         private readonly CustomerEmailValidator $customerEmail,
         private readonly ShipStationFaceShieldLineItemClassifier $faceShieldLineItems,
@@ -47,7 +46,7 @@ class ShipStationOrderEligibilityService
 
         if ($this->isPayPalSandboxLandingOrder($order)) {
             $capture = $this->resolveCaptureTransaction($order);
-            $environment = $this->payPalConfigResolver->resolveRefundEnvironment($order, $capture);
+            $environment = $this->paymentEnvironment->resolveRefundEnvironment($order, $capture);
             $slug = is_string($environment['landing_override_slug'] ?? null)
                 ? (string) $environment['landing_override_slug']
                 : null;
@@ -161,7 +160,7 @@ class ShipStationOrderEligibilityService
     private function isPayPalSandboxLandingOrder(Order $order): bool
     {
         $capture = $this->resolveCaptureTransaction($order);
-        $environment = $this->payPalConfigResolver->resolveRefundEnvironment($order, $capture);
+        $environment = $this->paymentEnvironment->resolveRefundEnvironment($order, $capture);
 
         return filled($environment['landing_override_slug'] ?? null)
             && ($environment['test_mode'] ?? false) === true;
