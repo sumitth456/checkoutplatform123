@@ -7,11 +7,19 @@ use App\Models\ShipStationIntegration;
 use App\Models\ShipStationSetting;
 use App\Modules\ShipStation\Enums\ShipStationOrderStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 abstract class ShipStationPhase1TrackingSyncTestCase extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Cache::flush();
+    }
 
     protected function enableGlobalTrackingWebhookConfig(): void
     {

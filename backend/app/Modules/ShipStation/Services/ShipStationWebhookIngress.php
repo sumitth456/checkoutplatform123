@@ -156,7 +156,12 @@ final class ShipStationWebhookIngress
 
         $this->dedup->rememberShortWindow($fingerprint);
 
-        DB::afterCommit(function () use ($receipt): void {
+        $this->dispatchTrackingJobAfterPersist($receipt);
+    }
+
+    private function dispatchTrackingJobAfterPersist(ShipStationWebhookReceipt $receipt): void
+    {
+        $callback = function () use ($receipt): void {
             try {
                 $this->trackingDispatcher->dispatchForReceipt($receipt->id);
                 $receipt->update([
@@ -175,6 +180,12 @@ final class ShipStationWebhookIngress
                     'failure_reason' => $exception->getMessage(),
                 ]);
             }
-        });
+        };
+
+        if (DB::transactionLevel() > 0) {
+            DB::afterCommit($callback);
+        } else {
+            $callback();
+        }
     }
 }
