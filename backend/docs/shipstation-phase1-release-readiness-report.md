@@ -1,7 +1,7 @@
 # ShipStation Phase 1 — Release Readiness (Engineering Pass)
 
 **Recorded (UTC):** 2026-11-24T15:10:00Z  
-**Release candidate:** `e023718257e41fd8303eddc2cb095aaaeecfcddcc` on `feat/shipstation-phase1-tracking-sync`  
+**Release candidate:** `eefcfd14d0398084caf73b24e9639e4d1271e874` on `feat/shipstation-phase1-tracking-sync`  
 **PR:** https://github.com/sumitth456/checkoutplatform123/pull/2  
 
 ---
@@ -19,7 +19,7 @@
 |-----|--------|--------|-----|
 | 45419341632 | `d124f7a` | failure | https://github.com/sumitth456/checkoutplatform123/actions/runs/45419341632 |
 | 45420917448 | `fcb28b2` | failure | https://github.com/sumitth456/checkoutplatform123/actions/runs/45420917448 |
-| 45422040680 | `e023718` | in progress at record time | https://github.com/sumitth456/checkoutplatform123/actions/runs/45422040680 |
+| 45422040680 | `e023718` | **failure** — 47 failed, 314 passed (71s) | https://github.com/sumitth456/checkoutplatform123/actions/runs/45422040680 |
 
 **Pre-existing baseline:** `origin/main` CI has reported ~40 failing tests (same count as rebill PR investigation vs `84367d8`). Phase 1 PR must not **increase** failure count; isolate ShipStation failures via `php artisan test --filter=ShipStationPhase1` on a clean checkout.
 
