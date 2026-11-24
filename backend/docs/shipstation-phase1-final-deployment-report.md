@@ -1,8 +1,8 @@
 # ShipStation Phase 1 — G1 Deployment Package (Prepared — Not Executed)
 
-**Recorded (UTC):** 2026-11-24T14:20:00Z  
+**Recorded (UTC):** 2026-11-24T15:10:00Z  
 **Gate:** G1 deployment package only — **no production operations**  
-**G0 verdict:** **NOT READY** (see `shipstation-phase1-g0-production-preflight-report.md` §25) — local restore **COMPLETE**; humans + fresh backup + release commit **PENDING**  
+**G0 verdict:** **NOT READY** (see `shipstation-phase1-g0-production-preflight-report.md` §25) — **local isolated restore COMPLETE**; humans + **fresh pre-G1 backup** + CI green on release branch **PENDING**  
 **G1 authorization:** **NOT GRANTED** — explicit operator approval required before any command on production
 
 ---
@@ -19,7 +19,9 @@ This document is the **controlled rollout package** for ShipStation Phase 1 glob
 |------|-------|
 | Current production commit | `53abb6c17962703433fce760d04d9d48bb437820` |
 | Phase 1 code on production today | **No** (`tracking_sync` absent from deployed `shipstation.php`) |
-| **Proposed deploy commit** | **PENDING** — operator must name an approved tag/commit that includes Phase 1 migrations + tests (local tree is **not** a single clean release commit on `origin/main`) |
+| **Proposed deploy commit (PR #2)** | `e023718257e41fd8303eddc2cb095aaaeecfcddcc` (`feat/shipstation-phase1-tracking-sync`) — supersede if a newer reviewed commit is merged |
+| PR | https://github.com/sumitth456/checkoutplatform123/pull/2 |
+| `origin/main` @ prepare time | `84367d8` |
 | Pre-deploy backup artifact (known) | `.backups/shipstation-display-status-20261120/db-pre-deploy.sql.gz` (SHA-256 verified on host **2026-11-24**) |
 | **Fresh pre-G1 backup** | **PENDING** — required at G1 window |
 
@@ -167,7 +169,8 @@ Use this file as the shell; archive under `.backups/` on host if required by ops
 | Blocker | Status |
 |---------|--------|
 | G0 READY | **No** |
-| Local isolated restore | **BLOCKED** (no local backup file; Docker Desktop stopped) |
+| Local isolated restore | **COMPLETE** — 114 tables, SHA-256 `ee60da74…cff`, `G0_SKIP_IMPORT=1` verify exit 0 (2026-11-24) |
+| Phase 1 tests on clean `origin/main` parity tree | **IN PROGRESS** — 48-test suite; CI + follow-up commits fixing `main` parity gaps |
 | Fresh production backup | **PENDING** |
 | Human owners / window / ticket | **PENDING** |
 | G1 explicit authorization | **NOT GRANTED** |

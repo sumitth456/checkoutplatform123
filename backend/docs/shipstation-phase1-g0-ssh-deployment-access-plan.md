@@ -111,3 +111,142 @@ Align with preflight **§19.3** (one command at a time, no bundled automation up
 - No key generation
 - No `sshd_config` or `authorized_keys` edits
 - No production backup or deploy
+
+---
+
+## 10. Implementation package (ops — run only with change ticket)
+
+**Prerequisites:** root break-glass session; no overlap with `leadcrm_*` / `rot_*` / `mockup_*` paths.
+
+### 10.1 UNIX groups and users (on VPS)
+
+```bash
+# As root — adjust UIDs if policy requires
+groupadd -f checkout-deploy
+groupadd -f checkout-verify
+groupadd -f checkout-dba
+
+useradd -m -s /bin/bash -g checkout-deploy -G docker checkout-deploy
+useradd -m -s /bin/bash -g checkout-verify -G docker checkout-verify
+useradd -m -s /bin/bash -g checkout-dba checkout-dba
+
+chown -R root:checkout-deploy /var/www/CheckoutPlatform
+chmod -R g+rX /var/www/CheckoutPlatform
+chmod -R g+w /var/www/CheckoutPlatform/backend/storage /var/www/CheckoutPlatform/backend/bootstrap/cache
+```
+
+Protect secrets:
+
+```bash
+chmod 640 /var/www/CheckoutPlatform/.env.docker
+chown root:checkout-deploy /var/www/CheckoutPlatform/.env.docker
+```
+
+### 10.2 Ed25519 keys (generate on **operator workstation**, not on VPS)
+
+```bash
+ssh-keygen -t ed25519 -a 64 -f ~/.ssh/checkoutplatform_deploy_ed25519 -C "checkout-deploy@$(hostname)"
+ssh-keygen -t ed25519 -a 64 -f ~/.ssh/checkoutplatform_verify_ed25519 -C "checkout-verify@$(hostname)"
+ssh-keygen -t ed25519 -a 64 -f ~/.ssh/checkoutplatform_dba_ed25519 -C "checkout-dba@$(hostname)"
+```
+
+Install public keys (root on VPS):
+
+```bash
+install -d -m 700 /home/checkout-deploy/.ssh /home/checkout-verify/.ssh /home/checkout-dba/.ssh
+# Paste one pubkey per line:
+nano /home/checkout-deploy/.ssh/authorized_keys
+nano /home/checkout-verify/.ssh/authorized_keys
+nano /home/checkout-dba/.ssh/authorized_keys
+chmod 600 /home/checkout-*/.ssh/authorized_keys
+chown -R checkout-deploy:checkout-deploy /home/checkout-deploy/.ssh
+chown -R checkout-verify:checkout-verify /home/checkout-verify/.ssh
+chown -R checkout-dba:checkout-dba /home/checkout-dba/.ssh
+```
+
+### 10.3 Sudoers fragments (`/etc/sudoers.d/checkoutplatform-*`)
+
+Use **exact** command paths (update if compose binary path differs):
+
+```sudoers
+# checkout-verify — read-only
+Cmnd_Alias CHECKOUT_VERIFY = \
+  /usr/bin/docker ps, \
+  /usr/bin/docker inspect checkout_*, \
+  /usr/bin/git -C /var/www/CheckoutPlatform rev-parse HEAD, \
+  /usr/bin/git -C /var/www/CheckoutPlatform status, \
+  /usr/bin/docker exec checkout_app php artisan about, \
+  /usr/bin/docker exec checkout_app php artisan migrate:status, \
+  /usr/local/bin/checkout-verify-readonly.sh *
+
+checkout-verify ALL=(root) NOPASSWD: CHECKOUT_VERIFY
+```
+
+```sudoers
+# checkout-deploy — app/worker only (no down -v, no prune)
+Cmnd_Alias CHECKOUT_DEPLOY = \
+  /usr/bin/docker compose --env-file /var/www/CheckoutPlatform/.env.docker -f /var/www/CheckoutPlatform/docker-compose.yml -f /var/www/CheckoutPlatform/docker-compose.prod.yml ps, \
+  /usr/bin/docker compose --env-file /var/www/CheckoutPlatform/.env.docker -f /var/www/CheckoutPlatform/docker-compose.yml -f /var/www/CheckoutPlatform/docker-compose.prod.yml logs *, \
+  /usr/bin/docker compose --env-file /var/www/CheckoutPlatform/.env.docker -f /var/www/CheckoutPlatform/docker-compose.yml -f /var/www/CheckoutPlatform/docker-compose.prod.yml build app worker, \
+  /usr/bin/docker compose --env-file /var/www/CheckoutPlatform/.env.docker -f /var/www/CheckoutPlatform/docker-compose.yml -f /var/www/CheckoutPlatform/docker-compose.prod.yml up -d app worker, \
+  /usr/bin/docker exec checkout_app php artisan config:cache, \
+  /usr/bin/docker exec checkout_worker supervisorctl status
+
+checkout-deploy ALL=(root) NOPASSWD: CHECKOUT_DEPLOY
+```
+
+```sudoers
+# checkout-dba — dump/restore checkout_mysql only (G0/G2 approved windows)
+Cmnd_Alias CHECKOUT_DBA = \
+  /usr/local/bin/checkout-dba-backup.sh, \
+  /usr/local/bin/checkout-dba-verify-dump.sh
+
+checkout-dba ALL=(root) NOPASSWD: CHECKOUT_DBA
+```
+
+### 10.4 Wrapper scripts (install on VPS)
+
+`/usr/local/bin/checkout-verify-readonly.sh` — allowlisted read-only checks only (no `git pull`, no migrations).
+
+`/usr/local/bin/checkout-dba-backup.sh` — wrap:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+PROJECT_ROOT="/var/www/CheckoutPlatform"
+# shellcheck source=/dev/null
+source "${PROJECT_ROOT}/.env.docker"
+DEST="/var/backups/CheckoutPlatform/$(date +%Y-%m-%d_%H-%M-%S)"
+mkdir -p "${DEST}"
+docker compose --env-file "${PROJECT_ROOT}/.env.docker" -f "${PROJECT_ROOT}/docker-compose.yml" \
+  -f "${PROJECT_ROOT}/docker-compose.prod.yml" exec -T mysql mysqldump \
+  --single-transaction --quick "${MYSQL_DATABASE}" | gzip -9 > "${DEST}/db-pre-g1.sql.gz"
+sha256sum "${DEST}/db-pre-g1.sql.gz" | tee "${DEST}/checksums.sha256"
+gzip -t "${DEST}/db-pre-g1.sql.gz"
+```
+
+### 10.5 Connection verification (from operator laptop)
+
+```bash
+ssh -i ~/.ssh/checkoutplatform_verify_ed25519 checkout-verify@2.25.90.141 \
+  'sudo /usr/bin/docker ps --filter name=checkout_'
+
+ssh -i ~/.ssh/checkoutplatform_deploy_ed25519 checkout-deploy@2.25.90.141 \
+  'sudo /usr/bin/git -C /var/www/CheckoutPlatform rev-parse HEAD'
+
+ssh -i ~/.ssh/checkoutplatform_dba_ed25519 checkout-dba@2.25.90.141 \
+  'sudo /usr/local/bin/checkout-dba-verify-dump.sh /var/backups/CheckoutPlatform/latest/db-pre-g1.sql.gz'
+```
+
+### 10.6 Key rotation and revocation
+
+1. Issue new Ed25519 key; append to `authorized_keys`; validate login; remove old key line.
+2. On compromise: remove key line immediately; rotate deploy window; audit `/var/log/auth.log`.
+3. `checkout-deploy` keys: 90-day rotation recommended; store passphrases in team vault only.
+
+### 10.7 Denied patterns (enforce in sudoers — no wildcards)
+
+- `docker compose down`, `docker compose down -v`
+- `docker system prune`, `docker volume rm`
+- Any `docker` command against `leadcrm_*`, `rot_*`, `mockup_*`
+- `php artisan migrate`, `queue:flush`, PayPal/ShipStation mutation scripts without G2 ticket
